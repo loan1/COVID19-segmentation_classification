@@ -1,6 +1,7 @@
 #https://stanford.edu/~shervine/blog/pytorch-how-to-generate-data-parallel
 from PIL import Image
 import cv2
+from matplotlib.pyplot import flag
 import numpy as np
 import torch
 from torch.utils.data import Dataset
@@ -25,15 +26,17 @@ class ImageDataset(Dataset): #train tren CXR
     def __getitem__(self,index): # 'Generates one sample of data'
         # print(self.img_folder + self.image_names.iloc[index])
     
-        # image=Image.open(self.img_folder + self.image_names.iloc[index]).convert('RGB')
-        image=cv2.imread(self.img_folder + self.image_names.iloc[index], 0) #GRAYSCALE
+        image=Image.open(self.img_folder + self.image_names.iloc[index]).convert('RGB')
+        # image=cv2.imread(self.img_folder + self.image_names.iloc[index], 0) #GRAYSCALE
+        # image=cv2.imread(self.img_folder + self.image_names.iloc[index], 1) #BGR
+        # # convert BGR => RGB
+        # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         image = np.array(image, dtype=np.float32)
         # print(type(image))
 
         if self.transform != None:
             aug = self.transform(image = image)
             image=aug['image']
-
 
         # image=self.transform(image)
         targets=self.labels[index]
@@ -45,11 +48,12 @@ class ImageDataset(Dataset): #train tren CXR
         return image, targets # chua 1 cap
 
 class LungImageDataset(Dataset): #train tren Lung
-    def __init__(self,csv, img_folder, mask_folder, transform = False): # 'Initialization'
+    def __init__(self,csv, img_folder, mask_folder, train = True, transform = False): # 'Initialization'
         self.csv=csv
         self.transform=transform
         self.img_folder=img_folder
         self.mask_folder = mask_folder
+        self.train = train
     
         self.image_names=self.csv[:]['file_name']# [:] lấy hết số cột số hàng của bảng
         self.labels= np.array(self.csv[:]['label']) # note kiểu mảng int đúng không?
@@ -60,25 +64,46 @@ class LungImageDataset(Dataset): #train tren Lung
     def __getitem__(self,index): # 'Generates one sample of data'
     
         image=cv2.imread(self.img_folder + self.image_names.iloc[index], 0)
-        image = np.array(image, dtype=np.float32)
+
+        # image = np.array(image, dtype=np.float32)
+
+        if self.train  == True:
+            flag = 'EDA_Train'
+        else:
+            flag = 'EDA_Test'
 
         if self.labels[index] == 0:
             lab = '/Negative/'
         else:
             lab = '/Positive/'
+        
+        # print(self.labels[index])
+        # print(lab)
+        # print('self.mask_folder: ',self.mask_folder + flag + lab + self.image_names.iloc[index])
 
-        mask = cv2.imread(self.mask_folder + lab + self.image_names.iloc[index], 0)
+        mask = cv2.imread(self.mask_folder + flag + lab + self.image_names.iloc[index], 0)
+        # print(mask)
+
+
         _, maskthres = cv2.threshold(mask, 0,255, cv2.THRESH_BINARY + cv2.THRESH_OTSU) #nhị phân hóa ảnh
 
         image = cv2.resize(image,(256,256))
+        maskthres = cv2.resize(maskthres,(256,256))
+        # print(image.shape)
+        # print(maskthres.shape)
+        
 
         res = cv2.bitwise_and(image,maskthres)
+        # print(type(res))
         res = cv2.cvtColor(res, cv2.COLOR_GRAY2RGB)
-
+        # print(type(res))
         res = cv2.resize(res,(256,256))
+        # print(res.shape)
         # res = res.transpose((2,0,1)) #ham cua numpy
-        res = torch.tensor(res)
-        res = torch.transpose(res,2,0)
+        # res = torch.tensor(res)
+        # res = torch.transpose(res,2,0)
+        # res = np.array(res, dtype=np.float32)
+        # print(type(res))
 
         if self.transform != False:  
             aug = self.transform(image = res)
@@ -89,6 +114,9 @@ class LungImageDataset(Dataset): #train tren Lung
         name = self.image_names[index]
         targets=self.labels[index]
         targets = torch.tensor(int(targets), dtype=torch.long) #đọc từng phần tử của mảng, chuyển từ array -> tensor; kiểu int64 tương ứng với long trong pytorch
+
+        # print(type(res))
+        # print(type(targets))
 
         return image, mask, maskthres, res, targets, name # chua 1 cap
 
@@ -108,7 +136,10 @@ class CXRImageDataset(Dataset): #train tren not lung
     def __getitem__(self,index): # 'Generates one sample of data'
         # print(self.img_folder + self.image_names.iloc[index])
     
-        image=cv2.imread(self.img_folder + self.image_names.iloc[index], 0)
+        # image=cv2.imread(self.img_folder + self.image_names.iloc[index], 0)
+        image=cv2.imread(self.img_folder + self.image_names.iloc[index], 1) #BGR
+        # convert BGR => RGB
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         image = np.array(image, dtype=np.float32)
         image = cv2.resize(image,(256,256))
 
@@ -116,6 +147,8 @@ class CXRImageDataset(Dataset): #train tren not lung
             lab = '/Negative/'
         else:
             lab = '/Positive/'
+
+        print('self.mask_folder', self.mask_folder)
 
         mask = cv2.imread(self.mask_folder + lab + self.image_names.iloc[index], 0)
         _, maskthres = cv2.threshold(mask, 0,255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)

@@ -8,9 +8,10 @@ def set_parameter_requires_grad (model, feature_extracting):
             param.requires_grad = False
 
 def initialize_model(num_classes, feature_extract):
+    # model = models.resnet152(True)
     model = models.resnet152(weights = 'ResNet152_Weights.DEFAULT')
     # edit inputchannel = 1: https://discuss.pytorch.org/t/grayscale-images-for-resenet-and-deeplabv3/48693
-    model.conv1 = nn.Conv2d(in_channels = 1, out_channels = 64, kernel_size=7, stride=2, padding=3, bias=False)
+    # model.conv1 = nn.Conv2d(in_channels = 1, out_channels = 64, kernel_size=7, stride=2, padding=3, bias=False) 
 
     set_parameter_requires_grad(model, feature_extract)
     num_ftrs = model.fc.in_features

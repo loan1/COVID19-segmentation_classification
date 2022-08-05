@@ -3,7 +3,7 @@ import numpy as np
 from tqdm import tqdm
 import torch
 
-def training_loop(model, optimizer, criterion, scheduler, device, num_epochs, dataloader, CHECKPOINT_PATH):
+def training_loop(model, optimizer, criterion, scheduler, device, num_epochs, dataloader, CHECKPOINT_PATH, model_path):
     model.to(device)
     #List to store loss to visualize
     lossli = []
@@ -26,7 +26,8 @@ def training_loop(model, optimizer, criterion, scheduler, device, num_epochs, da
         ###################
         
         model.train()
-        for data, label in tqdm(dataloader()['train']):
+        # for data, label in tqdm(dataloader()['train']):
+        for _,_,_, data, label, _ in tqdm(dataloader()['train']):
             data = data.to(device)
             label = label.to(device)
             optimizer.zero_grad()
@@ -51,7 +52,7 @@ def training_loop(model, optimizer, criterion, scheduler, device, num_epochs, da
         
         model.eval()
         with torch.no_grad():
-            for data, label in tqdm(dataloader()['val']):
+            for _,_,_,data, label,_ in tqdm(dataloader()['val']):
                 data = data.to(device)
                 label = label.to(device)
                 output = model(data)
@@ -99,7 +100,7 @@ def training_loop(model, optimizer, criterion, scheduler, device, num_epochs, da
             
             count = 0
             print('count = ',count)
-            torch.save(model, '/mnt/DATA/covid19_resnet152_python-main/archive_14gb/mainscript/classification/model/modelCXRFTResNet50.pt') #save model 
+            torch.save(model, model_path) #save model 
                                   
             valid_loss_min = valid_loss
         else:
