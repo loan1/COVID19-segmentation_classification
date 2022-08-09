@@ -25,7 +25,7 @@ sys.path.insert(0, '/mnt/DATA/covid19_resnet152_python-main/archive_14gb/mainscr
 from Train_data import augs, transfms
 from script.utils import *
 from script.train import training_loop
-from script.dataset import ImageDataset, LungImageDataset, CXRImageDataset
+from script.dataset import ImageDataset, LungImageDataset
 from script.test import img_transform, test_loop
 from script.visualize import *
 # from script.data import *
@@ -46,8 +46,9 @@ import matplotlib.pyplot as plt
 
 def get_opt():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--CHECKPOINT_PATH", default = './model/FT_ResNet152_cp_3channel_Lung.pt',type=str)
-    parser.add_argument("--modelpath", default = './model/modelCXRFTResNet152_Lung_GRAYSCALE.pt',type=str)
+    parser.add_argument("--CHECKPOINT_PATH", default = './model/FT_ResNet152_cp_CXR_RGB_mean_std_compute.pt',type=str)
+    parser.add_argument("--modelpath", default = './model/modelCXRFTResNet152_CXR_RGB_mean_std_compute.pt',type=str)
+
     parser.add_argument('--train_path', default='/mnt/DATA/covid19_resnet152_python-main/archive_14gb/COVIDxCXR3/train/', type=str)
     parser.add_argument('--test_path', default='/mnt/DATA/covid19_resnet152_python-main/archive_14gb/COVIDxCXR3/test/', type= str)
 
@@ -105,15 +106,15 @@ def dataloader():
     # print(val_txt['label'].value_counts())
     # print(val_txt.count())
 
-    # train_dataset = ImageDataset(train_txt,opt.train_path,augs)
-    # test_dataset = ImageDataset(test_txt,opt.test_path,transfms)
-    # val_dataset = ImageDataset(val_txt,opt.train_path,transfms)
+    train_dataset = ImageDataset(train_txt,opt.train_path,augs)
+    test_dataset = ImageDataset(test_txt,opt.test_path,transfms)
+    val_dataset = ImageDataset(val_txt,opt.train_path,transfms)
 
     # print(train_txt)
 
-    train_dataset = LungImageDataset(train_txt,opt.train_path,opt.mask_path,True,augs)
-    test_dataset = LungImageDataset(test_txt,opt.test_path,opt.mask_path,False,transfms)
-    val_dataset = LungImageDataset(val_txt,opt.train_path,opt.mask_path, True, transfms)
+    # train_dataset = LungImageDataset(train_txt,opt.train_path,opt.mask_path,True,augs)
+    # test_dataset = LungImageDataset(test_txt,opt.test_path,opt.mask_path,False,transfms)
+    # val_dataset = LungImageDataset(val_txt,opt.train_path,opt.mask_path, True, transfms)
 
 
     # print(train_dataset)
@@ -192,16 +193,16 @@ def main():
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
 
-    visualize_loss(loss_list, './report/LUNG/lossFTResNet152_GRAYSCALE.png')
-    visualize_acc(acc_list,'./report/LUNG/ACCFTResNet152_GRAYSCALE.png')
+    visualize_loss(loss_list, './report/CXR/lossFTResNet152_CXR_RGB_mean_std_compute.png')
+    visualize_acc(acc_list,'./report/CXR/ACCFTResNet152_CXR_RGB_mean_std_compute.png')
 
     # resnet = load_model(opt.CHECKPOINT_PATH, resnet)
     y_true, y_pred = test_loop(resnet, device, dataloader()['test'])
     accuracy = accuracy_score(y_true, y_pred)
     print(accuracy)
 
-    confusion(y_true, y_pred, opt.classes, './report/LUNG/confusionmatrix_3channelLUNG_GRAYSCALE.png')
-    report(y_true, y_pred, opt.classes, './report/LUNG/classification_reportpy152_3channelLUNG_GRAYSCALE.txt')
+    confusion(y_true, y_pred, opt.classes, './report/CXR/confusionmatrix_CXR_RGB_mean_std_compute.png')
+    report(y_true, y_pred, opt.classes, './report/CXR/classification_reportpy152_CXR_RGB_mean_std_compute.txt')
     
     pred_str = str('')
 
@@ -222,8 +223,8 @@ def testreport(resnet):
     accuracy = accuracy_score(y_true, y_pred)
     print(accuracy)
 
-    confusion(y_true, y_pred, opt.classes, './report/Lung/confusionmatrix_LUNGRGB.png')
-    report(y_true, y_pred, opt.classes, './report/Lung/classification_reportpy152_LUNGRGB.txt')
+    confusion(y_true, y_pred, opt.classes, './report/CXR/confusionmatrix_CXR_RGB_mean_std_compute.png')
+    report(y_true, y_pred, opt.classes, './report/CXR/classification_reportpy152_CXR_RGB_mean_std_compute.txt')
     
     pred_str = str('')
 
@@ -256,6 +257,6 @@ if __name__ == '__main__':
     resnet = initialize_model(opt.num_classes, opt.feature_extract)
     
     # visualiz()
-    # main()
+    main()
     # dataloader()
-    testreport(resnet)
+    # testreport(resnet)

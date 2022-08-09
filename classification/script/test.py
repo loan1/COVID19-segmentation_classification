@@ -10,8 +10,8 @@ def test_loop(model_ft, device, test_dataloader):
         y_pred = []
         model_ft.to(device)
         model_ft.eval()
-        # for _, _, data, target in test_dataloader:
-        for _,_,_,data, target,_ in test_dataloader:
+        for data, target in test_dataloader:
+        # for _,_,_,_,data, target,_ in test_dataloader:
             batch_size = data.size(0)
             data = data.to(device)
             target = target.to(device)

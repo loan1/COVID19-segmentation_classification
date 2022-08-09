@@ -26,8 +26,8 @@ def training_loop(model, optimizer, criterion, scheduler, device, num_epochs, da
         ###################
         
         model.train()
-        # for data, label in tqdm(dataloader()['train']):
-        for _,_,_, data, label, _ in tqdm(dataloader()['train']):
+        for data, label in tqdm(dataloader()['train']):
+        # for _,_,_,_, data, label, _ in tqdm(dataloader()['train']):
             data = data.to(device)
             label = label.to(device)
             optimizer.zero_grad()
@@ -52,7 +52,8 @@ def training_loop(model, optimizer, criterion, scheduler, device, num_epochs, da
         
         model.eval()
         with torch.no_grad():
-            for _,_,_,data, label,_ in tqdm(dataloader()['val']):
+            for data, label in tqdm(dataloader()['val']):
+            # for _,_,_,_,data, label,_ in tqdm(dataloader()['val']):
                 data = data.to(device)
                 label = label.to(device)
                 output = model(data)
