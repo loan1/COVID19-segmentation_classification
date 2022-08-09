@@ -10,13 +10,14 @@ augs = A.Compose([
             A.Rotate(limit=15),
         ], p = 0.1),
   
-        A.Normalize(mean = [0.5128], std =[0.2220]),
+        A.Normalize(mean = [0.5002, 0.5002, 0.5003], std = [0.2079, 0.2079, 0.2079]),
         ToTensorV2()   
     ])
+    
 
 transfms = A.Compose([
     A.Resize(256,256),
-    A.Normalize(mean = [0.5128], std =[0.2220]), 
+    A.Normalize(mean = [0.5002, 0.5002, 0.5003], std = [0.2079, 0.2079, 0.2079]),
     ToTensorV2() 
 ])
 
