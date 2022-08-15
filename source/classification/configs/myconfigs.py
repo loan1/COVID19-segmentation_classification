@@ -1,0 +1,26 @@
+import argparse
+
+def get_opt():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--checkpoint_path", default = '/mnt/DATA/research/classificationCOVID19applyseg/result/classification/model/',type=str)
+    parser.add_argument('--img_path', default='/mnt/DATA/research/classificationCOVID19applyseg/dataset/COVIDxCXR3/', type=str)
+    parser.add_argument('--mask_path', default='/mnt/DATA/research/classificationCOVID19applyseg/result/segmentation/lung_mask/', type= str)
+    parser.add_argument("--result_path", default='/mnt/DATA/research/classificationCOVID19applyseg/result/classification/report/', type = str)
+
+    parser.add_argument('--batch_size', default=16, type=int)
+    parser.add_argument('--num_epochs', default= 50, type=int)
+    parser.add_argument('--lr', default=1e-3, type=float)  
+    parser.add_argument('--num_classes', default=2, type=int)
+    parser.add_argument('--classes', default=['Negative', 'Positive'])
+    parser.add_argument('--img_size', default= 256, type=int)
+    parser.add_argument('--mean', default=[0.5002, 0.5002, 0.5003])
+    parser.add_argument('--std', default= [0.2079, 0.2079, 0.2079])
+  
+
+    parser.add_argument('--feature_extract',action='store_true', default= False)
+ 
+    opt = parser.parse_args()
+    return opt
+
+
+
