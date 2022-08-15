@@ -20,9 +20,9 @@ def initialize_model(num_classes, feature_extract):
      
     return model
 
-def load_model(model_path, model):
-    checkpoint = torch.load(model_path)#, map_location=device)
-    model.load_state_dict(checkpoint['model_state_dict'])
+def load_model(model_path):
+    model = torch.load(model_path)#, map_location=device)
+    # model.load_state_dict(checkpoint['model_state_dict'])
     return model
 
 def optimi(model_ft, device, feature_extract, lr, num_epochs):
@@ -51,3 +51,13 @@ def optimi(model_ft, device, feature_extract, lr, num_epochs):
     optimizer = Adam(params_to_update ,lr = lr, weight_decay = lr/num_epochs)
     scheduler = lr_scheduler.MultiStepLR(optimizer, milestones = [5,10], gamma=0.1, last_epoch=-1, verbose=False)
     return optimizer, scheduler
+
+def load_chekpoint(path):
+    checkpoint = torch.load(path)#, map_location=device)
+    # model_ft.load_state_dict(checkpoint['model_state_dict'])
+    # optimizer_ft.load_state_dict(checkpoint['optimizer_state_dict'])
+    epoch = checkpoint['epoch']
+    loss_list = checkpoint['loss_list']
+    acc_list = checkpoint['train_acc']
+
+    return epoch, loss_list, acc_list

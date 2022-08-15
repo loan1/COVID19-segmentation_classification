@@ -4,6 +4,12 @@ from PIL import Image
 import cv2
 import numpy as np
 
+# visualize
+import matplotlib.pyplot as plt
+
+#for evaluating model
+from sklearn.metrics import accuracy_score
+
 def test_loop(model_ft, device, test_dataloader):
     with torch.no_grad():
         y_true = []
@@ -32,24 +38,24 @@ def img_transform(path_img, test_transform):
     res = res.float().cuda()
     return res
 
-# def testreport(model, confusion, report, checkpoint, classes, predict):
+def testreport(model, confusion, report, dataloader, classes, predict, device):
 
-#     y_true, y_pred = test_loop(resnet, device, dataloader()['test'])
-#     accuracy = accuracy_score(y_true, y_pred)
-#     print(accuracy)
+    y_true, y_pred = test_loop(model, device, dataloader['test'])
+    accuracy = accuracy_score(y_true, y_pred)
+    print(accuracy)
 
-#     confusion(y_true, y_pred, opt.classes, './report/CXR/confusionmatrix_CXR_RGB_mean_std_compute.png')
-#     report(y_true, y_pred, opt.classes, './report/CXR/classification_reportpy152_CXR_RGB_mean_std_compute.txt')
+    confusion(y_true, y_pred, classes, './report/CXR/confusionmatrix_CXR_RGB_mean_std_compute.png')
+    report(y_true, y_pred, classes, './report/CXR/classification_reportpy152_CXR_RGB_mean_std_compute.txt')
     
-#     pred_str = str('')
+    pred_str = str('')
 
-#     path_image = './pred/covid.jpg'
+    path_image = './pred/covid.jpg'
 
-#     img = Image.open(path_image)
-#     plt.imshow(img)
+    img = Image.open(path_image)
+    plt.imshow(img)
 
-#     predict(path_image,resnet)
-#     plt.title('predict:{}'.format(pred_str))
-#     plt.text(5,45,'top {}:{}'.format(1,pred_str), bbox = dict(fc='yellow'))
-#     plt.show()
+    predict(path_image,model)
+    plt.title('predict:{}'.format(pred_str))
+    plt.text(5,45,'top {}:{}'.format(1,pred_str), bbox = dict(fc='yellow'))
+    plt.show()
             
