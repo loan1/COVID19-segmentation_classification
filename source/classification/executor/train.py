@@ -3,7 +3,7 @@ import numpy as np
 from tqdm import tqdm
 import torch
 
-def training_loop(model, optimizer, criterion, scheduler, device, num_epochs, dataloader, checkpoint_path, model_path):
+def training_loop(model, model_name, optimizer, criterion, scheduler, device, num_epochs, dataloader, checkpoint_path, model_path):
     
     model.to(device)
     #List to store loss to visualize
@@ -93,7 +93,7 @@ def training_loop(model, optimizer, criterion, scheduler, device, num_epochs, da
             'train_acc': accli,
             'loss_list': lossli,
             'loss': loss
-            }, checkpoint_path + 'ResNet152.pt')
+            }, checkpoint_path + model_name +'ver2.pt')
         
         if valid_loss <= valid_loss_min:
             print('Validation loss decreased ({:.6f} --> {:.6f}). Saving model ...'.format(
@@ -102,7 +102,7 @@ def training_loop(model, optimizer, criterion, scheduler, device, num_epochs, da
             
             count = 0
             print('count = ',count)
-            torch.save(model, model_path + 'ResNet152.pt') #save model 
+            torch.save(model, model_path + model_name+'ver2.pt') #save model 
                                   
             valid_loss_min = valid_loss
         else:

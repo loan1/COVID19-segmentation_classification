@@ -2,7 +2,6 @@
 #importing the libraries
 
 import time
-from unittest import loader
 
 #for reading and displaying images
 
@@ -51,31 +50,35 @@ def main(opt):
     lr = opt.lr
     num_epochs = opt.num_epochs
     num_classes = opt.num_classes
-    
+    lsmodel_name = opt.model_name    
 
-    resnet = initialize_model(num_classes, feature_extract)
-    optimizer, scheduler = optimi(resnet,device, feature_extract, lr, num_epochs)
+    model_list = initialize_model(num_classes, feature_extract)
+    model = model_list[1]
+    model_name = lsmodel_name[1]
+    print(model_name)
+    print(model)
+    optimizer, scheduler = optimi(model,device, feature_extract, lr, num_epochs)
 
-    # TRAIN
-    # since = time.time()
-    # loss_list, acc_list = training_loop(resnet, optimizer, criterion, scheduler, device, num_epochs, myloader, checkpoint_path, model_path)
-    # time_elapsed = time.time() - since
-    # print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
+    # # # TRAIN
+    since = time.time()
+    loss_list, acc_list = training_loop(model, model_name, optimizer, criterion, scheduler, device, num_epochs, myloader, checkpoint_path, model_path)
+    time_elapsed = time.time() - since
+    print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
 
     # visualize loss and acc
-    _, loss_list, acc_list = load_chekpoint(checkpoint_path + 'ResNet152.pt')
-    visualize_loss(loss_list, result_path + 'CXR/lossFTResNet152_CXR_RGB_mean_std_compute.png')
-    visualize_acc(acc_list,result_path + 'CXR/ACCFTResNet152_CXR_RGB_mean_std_compute.png')
+    _, loss_list, acc_list = load_chekpoint(checkpoint_path + model_name + 'ver2.pt')
+    visualize_loss(loss_list, result_path + 'CXR/' + model_name + '/lossFT_CXR_RGB_mean_std_compute.png', model_name)
+    visualize_acc(acc_list,result_path + 'CXR/' + model_name + '/ACCFT_CXR_RGB_mean_std_compute.png', model_name)
 
 
 # TEST
-    resnet = load_model(model_path + 'ResNet152.pt')
-    y_true, y_pred = test_loop(resnet, device, myloader['test'])
+    model = load_model(model_path + model_name + 'ver2.pt')
+    y_true, y_pred = test_loop(model, device, myloader['test'])
     accuracy = accuracy_score(y_true, y_pred)
     print(accuracy)
 
-    confusion(y_true, y_pred, opt.classes, result_path +'CXR/confusionmatrix_CXR_RGB_mean_std_compute.png')
-    report(y_true, y_pred, opt.classes, result_path +'CXR/classification_reportpy152_CXR_RGB_mean_std_compute.txt')
+    confusion(y_true, y_pred, opt.classes, result_path +'CXR/' + model_name + '/confusionmatrix_CXR_RGB_mean_std_compute.png')
+    report(y_true, y_pred, opt.classes, result_path +'CXR/' + model_name + '/classification_reportpy_CXR_RGB_mean_std_compute.txt')
     
     # pred_str = str('')
 
@@ -91,7 +94,7 @@ def main(opt):
 
 
 if __name__ == '__main__':
-    seed = 262022
+    seed = 262022 # random
     seed_everything(seed)
     opt = get_opt()
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')

@@ -8,7 +8,7 @@ def get_opt():
     parser.add_argument("--result_path", default='/mnt/DATA/research/classificationCOVID19applyseg/result/classification/report/', type = str)
 
     parser.add_argument('--batch_size', default=16, type=int)
-    parser.add_argument('--num_epochs', default= 50, type=int)
+    parser.add_argument('--num_epochs', default= 70, type=int)
     parser.add_argument('--lr', default=1e-3, type=float)  
     parser.add_argument('--num_classes', default=2, type=int)
     parser.add_argument('--classes', default=['Negative', 'Positive'])
@@ -16,7 +16,7 @@ def get_opt():
     parser.add_argument('--mean', default=[0.5002, 0.5002, 0.5003])
     parser.add_argument('--std', default= [0.2079, 0.2079, 0.2079])
   
-
+    parser.add_argument('--model_name', default=['ResNet152','VGG19_bn', 'ResNet18', 'ResNet50', 'EfficientNetB7', 'InceptionResNetV2'])
     parser.add_argument('--feature_extract',action='store_true', default= False)
  
     opt = parser.parse_args()
