@@ -127,7 +127,7 @@ def plot_acc_loss (loss, val_loss, acc, val_acc, path):
     plt.figure (figsize = (12, 4))
     plt.subplot (1, 2, 1)
     plt.plot (range (len (loss)), loss, 'r-', label = 'Training')
-    plt.plot (range (len (loss)), val_loss, 'go-', label = 'Validation')
+    plt.plot (range (len (val_loss)), val_loss, 'go-', label = 'Validation')
     plt.xlabel ('Epochs')
     plt.ylabel ('Loss')
     plt.title ('Loss')
@@ -135,7 +135,7 @@ def plot_acc_loss (loss, val_loss, acc, val_acc, path):
 
     plt.subplot (1, 2, 2)
     plt.plot (range (len (acc)), acc, 'b-', label = 'Training')
-    plt.plot (range (len (acc)), val_acc, 'ro-', label = 'Validation')
+    plt.plot (range (len (val_acc)), val_acc, 'ro-', label = 'Validation')
     plt.xlabel ('Epochs')
     plt.ylabel ('accuracy')
     plt.title ('Accuracy')
@@ -174,3 +174,49 @@ def plot_IoU_DSC(train_IoU, val_IoU, train_DSC, val_DSC, path):
     plt.legend ()
     plt.savefig(path, bbox_inches='tight')
     plt.show ()
+
+def visualize_train(train_list, val_list):
+
+    train_loss, val_loss, train_acc, val_acc = [], [], [], []
+    train_IoU, val_IoU, train_dice, val_dice = [], [], [], []
+
+    for idx in range(len(train_list)):
+        train_loss.append(train_list[idx]['train_loss'])
+        val_loss.append(val_list[idx]['val_loss'])
+        train_acc.append(train_list[idx]['accuracy'])
+        val_acc.append(val_list[idx]['accuracy'])
+        train_IoU.append(train_list[idx]['jaccard'])
+        val_IoU.append(val_list[idx]['val_jaccard'])
+        train_dice.append(train_list[idx]['dice'])
+        val_dice.append(val_list[idx]['val_dice'])
+    # print(val_loss)   
+
+    # VE LOSS_ACC
+    plot_acc_loss(train_loss, val_loss, train_acc, val_acc, './visualize/loss_accUNetPPResNet18.pt.png')  
+    plot_IoU_DSC(train_IoU, val_IoU,train_dice, val_dice, './visualize/IoU_DSCUNetPPResNet18.png')
+
+
+def visualize_train(hist_model):
+
+    train_loss, val_loss, train_acc, val_acc = [], [], [], []
+    train_IoU, val_IoU, train_dice, val_dice = [], [], [], []
+
+    for idx in range(len(hist_model['train_dict'])):
+        # print(len(hist_model['train_dict']))#3
+        # print(hist_model['train_dict']['loss']) #0.03495520963683307
+
+        # print(len(hist_model))#5
+        print(hist_model['train_dict']['loss']) #0.03495520963683307
+        # train_loss.append(hist_model['train_dict']['loss'][idx])
+        # val_loss.append(hist_model['val_dict']['loss'][idx])
+        # train_acc.append(hist_model['train_dict']['accuracy'][idx])
+        # val_acc.append(hist_model['val_dict']['accuracy'][idx])
+        # train_IoU.append(hist_model['train_dict']['jaccard'][idx])
+        # val_IoU.append(hist_model['val_dict']['val_jaccard'][idx])
+        # train_dice.append(hist_model['train_dict']['dice'][idx])
+        # val_dice.append(hist_model['val_dict']['val_dice'][idx])
+    # print(val_loss)   
+
+    # VE LOSS_ACC
+    # plot_acc_loss(train_loss, val_loss, train_acc, val_acc, './visualize/loss_acc_FPNDenseNet121.pt.png')  
+    # plot_IoU_DSC(train_IoU, val_IoU,train_dice, val_dice, './visualize/IoU_DSC_FPNDenseNet121.pt')

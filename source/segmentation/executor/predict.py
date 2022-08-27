@@ -1,7 +1,8 @@
 # link dataset https://www.kaggle.com/datasets/andyczhao/covidx-cxr2
 # import module
-from script.custom_dataset import DatasetPredict
-from script.Train_data import transfms
+from dataloader.custom_dataset import DatasetPredict
+from dataloader.transform import transfms
+from configs.myconfigs import get_opt
 #import lib
 import cv2
 from skimage import morphology
@@ -87,6 +88,43 @@ def postprocess(img):
     return thresh
 
 
+def save_filename(data, path, opt):
+        #################################
+    # TAO FILE TXT LUU TEN ANH #####
+    ################################
+    list_name =[]
+    # for _, name in tqdm(dataloaderPre(opt.batch_size, transfms)['Positive']):
+    for _, name in tqdm(data):
+        list_name.append(name)
+
+    res = []
+    for i in tqdm(range(len(list_name)-1)):
+        for idx in range(opt.batch_size):
+            # print(i, idx, end= ' ')
+            res.append(list_name[i][idx])
     
+    for i in range(len(list_name[len(list_name)-1])): #xu li phan le trong batch cuoi
+        res.append(list_name[len(list_name)-1][i])
+
+    np.savetxt(path, res, fmt = '%s')
+    
+# save lung mask
+def save_lungmask (imgpath, train, neg, file_name, path, path_np, opt):
+    y = np.load(path_np, allow_pickle=True)
+    list_name = np.loadtxt(file_name, dtype = list)
+    bs = len(dataloaderPre(imgpath, opt.batch_size, transfms, train, neg)) # 
+
+    for i in tqdm(range(bs - 1)):   # 
+
+        for idx in range(opt.batch_size):    
+            # ret = postprocess(y[i][idx])  
+            ret = y[i][idx]    
+            plt.imsave(path + list_name[i*opt.batch_size+idx], ret) 
+
+    for idx in tqdm(range(len(list_name) - (bs -1)*opt.batch_size)): #xu li phan le trong batch cuoi
+        # ret = postprocess(y[bs - 1][idx])
+        ret = y[bs-1][idx]
+        plt.imsave(path + list_name[(bs -1)*opt.batch_size+idx], ret)
+    plt.close('all')   
 
 

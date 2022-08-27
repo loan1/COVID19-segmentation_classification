@@ -1,116 +1,38 @@
 # import modules
-from script.Train_data import augs, transfms
-from script.train import fit
-from script.visualize import plot_IoU_DSC, plot_acc_loss, plot_loss
-from script.utils import load_checkpoint, seed_everything, ComboLoss, calculate_metrics, set_dataloader, set_model, set_model
-from script.test import test
-from script.predict import dataloaderPre, predict, postprocess
-import script.models as models
+from dataloader.transform import augs, transfms
+from dataloader.mydataloader import set_dataloader
+from executor.train import fit
+from utils.visualize import visualize_train, plot_acc_loss, plot_IoU_DSC
+from utils.myutils import seed_everything
+from executor.test import test
+from executor.predict import dataloaderPre, predict, save_filename, save_lungmask
+from model.mymodels import load_checkpoint, set_model, list_model_FPN, list_model_UNetPP, list_modelUNet
+from configs.myconfigs import get_opt
+from evaluation.mymetric import calculate_metrics
+
 
 # import lib
-import argparse
 import torch
 import numpy as np
-import os
-from PIL import Image
-import matplotlib.pyplot as plt
-from tqdm import tqdm
+from torch.optim import lr_scheduler
 
 
-def get_opt():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--batch_size', default=32, type=int)
-    parser.add_argument('--start_epoch', default=0, type=int)
-    parser.add_argument('--end_epoch', default= 40, type=int)
-    parser.add_argument('--lr', default=1e-4, type=float)
-    parser.add_argument('--checkpoint_path', default='./model/checkpointFPNDenseNet121.pt', type=str)
-    parser.add_argument('--model_path', default='./model/modelFPNDenseNet121.pt', type=str)
-    parser.add_argument('--first_train', default=1, type=int)
-    opt = parser.parse_args()
-    return opt
+def train (hist_model, opt, first = True):
 
-def visualize_train(train_list, val_list):
+ 
+    if first == False:    
+        hist_model = load_checkpoint (opt.checkpoint_path, hist_model)
+        hist_model['scheduler'] = lr_scheduler.CosineAnnealingLR(hist_model['optimizer'], T_max=10)
 
-    train_loss, val_loss, train_acc, val_acc = [], [], [], []
-    train_IoU, val_IoU, train_dice, val_dice = [], [], [], []
-
-    for idx in range(len(train_list)):
-        train_loss.append(train_list[idx]['train_loss'])
-        val_loss.append(val_list[idx]['val_loss'])
-        train_acc.append(train_list[idx]['accuracy'])
-        val_acc.append(val_list[idx]['accuracy'])
-        train_IoU.append(train_list[idx]['jaccard'])
-        val_IoU.append(val_list[idx]['val_jaccard'])
-        train_dice.append(train_list[idx]['dice'])
-        val_dice.append(val_list[idx]['val_dice'])
-    # print(val_loss)   
-
-    # VE LOSS_ACC
-    plot_acc_loss(train_loss, val_loss, train_acc, val_acc, './visualize/loss_accUNetPPResNet18.pt.png')  
-    plot_IoU_DSC(train_IoU, val_IoU,train_dice, val_dice, './visualize/IoU_DSCUNetPPResNet18.pt')
-
-
-def train( device, model, optimizer, scheduler, augs, transfms, start_epochs, end_epochs, loss_fn, batch_size, checkpoint_path, model_path, first = True, train_list =[], val_list = []):
-    if first == 1:    
-        train_dataloader, val_dataloader, _ = set_dataloader(batch_size, augs, transfms)
-    else:
-        model, optimizer, start_epochs, train_list, val_list = load_checkpoint(checkpoint_path, model, optimizer)
-    train_list, val_list = fit(model, train_dataloader, val_dataloader, optimizer, scheduler, start_epochs, end_epochs, loss_fn, calculate_metrics, checkpoint_path, model_path, device, train_list, val_list)
+    train_dict, val_dict = fit (hist_model, set_dataloader,  calculate_metrics, opt)
     
     # plot result
-    visualize_train(train_list, val_list)
+    visualize_train(train_dict, val_dict)
 
-    return train_list, val_list
+    return train_dict, val_dict
 
+def inference (img_path, mask_path, img_np, predict_np, filename, model, opt, train = True, neg = True):
 
-def save_filename(data, path):
-        #################################
-    # TAO FILE TXT LUU TEN ANH #####
-    ################################
-    list_name =[]
-    # for _, name in tqdm(dataloaderPre(opt.batch_size, transfms)['Positive']):
-    for _, name in tqdm(data):
-        list_name.append(name)
-
-    # print('list_name: ', len(list_name)) # 7
-    # print('anh le o cuoi: ',len(list_name[6])) # 8
-
-    # sum_img = (len(list_name) -1)*32 + len(list_name[len(list_name)-1])
-
-    res = []
-    for i in tqdm(range(len(list_name)-1)):
-        for idx in range(opt.batch_size):
-            # print(i, idx, end= ' ')
-            res.append(list_name[i][idx])
-    
-    for i in range(len(list_name[len(list_name)-1])): #xu li phan le trong batch cuoi
-        res.append(list_name[len(list_name)-1][i])
-
-    # print('res: ',len(res))
-
-    # np.savetxt('./visualize/FPN_DenseNet121/lung_mask/Positive/filenamePos.txt', res, fmt = '%s')
-    np.savetxt(path, res, fmt = '%s')
-    
-# save lung mask
-def save_lungmask (imgpath, train, neg, file_name, path, path_np):
-    y = np.load(path_np, allow_pickle=True)
-    list_name = np.loadtxt(file_name, dtype = list)
-    bs = len(dataloaderPre(imgpath, opt.batch_size, transfms, train, neg)) # 
-
-    for i in tqdm(range(bs - 1)):   # 
-
-        for idx in range(opt.batch_size):    
-            # ret = postprocess(y[i][idx])  
-            ret = y[i][idx]    
-            plt.imsave(path + list_name[i*opt.batch_size+idx], ret) 
-
-    for idx in tqdm(range(len(list_name) - (bs -1)*opt.batch_size)): #xu li phan le trong batch cuoi
-        # ret = postprocess(y[bs - 1][idx])
-        ret = y[bs-1][idx]
-        plt.imsave(path + list_name[(bs -1)*opt.batch_size+idx], ret)
-    plt.close('all')
-
-def inference (img_path, mask_path, img_np, predict_np, filename, model, train = True, neg = True):
     #load model
     model.load_state_dict(torch.load(opt.model_path)) 
 
@@ -122,10 +44,10 @@ def inference (img_path, mask_path, img_np, predict_np, filename, model, train =
     np.save(predict_np,y_predict)
 
     # save file name
-    save_filename(dataloaderPre(img_path, opt.batch_size, transfms, train, neg), filename)
+    save_filename(dataloaderPre(img_path, opt.batch_size, transfms, train, neg), filename, opt)
 
     # save lung mask
-    save_lungmask (img_path, train, neg, filename, mask_path , predict_np)
+    save_lungmask (img_path, train, neg, filename, mask_path , predict_np,opt)
 
 if __name__ == '__main__':
     seed = 262022
@@ -134,46 +56,67 @@ if __name__ == '__main__':
     opt = get_opt()
     device = torch.device('cuda:0' 
     if torch.cuda.is_available() else 'cpu')
-    model = models.list_model_FPN[5].to(device)
 
-    optimizer, scheduler, loss_fn = set_model(device, opt.lr, model)
+    model = list_model_FPN[5].to(device)
+    hist_model = set_model (opt.lr, model)
+    hist_model['start_epoch'] = opt.start_epoch
+    hist_model['train_dict'], hist_model['val_dict'] = [],[]
 
-    # # TRAIN
-    # train_list, val_list = train(device, model, optimizer, scheduler, augs, transfms, opt.start_epoch, opt.end_epoch, loss_fn, opt.batch_size, opt.checkpoint_path, opt.model_path, opt.first_train)
+  
+
+    # TRAIN
+    # train_dict, val_dict = train(hist_model,opt)
 
     # LOAD CHECKPOINT
-    # model, optimizer, start_epochs, train_list, val_list = load_checkpoint(opt.checkpoint_path, model, optimizer)
+    # hist_model = load_checkpoint (opt.checkpoint_path, hist_model)
+
+    #visualize train
+    train_loss = [0.1941, 0.0761, 0.0656, 0.0607, 0.0577, 0.0553, 0.0532, 0.051, 0.0498, 0.0486, 0.0483, 0.0485, 0.0486, 0.0492, 0.0496, 0.05, 0.0496, 0.0503, 0.0495, 0.0485, 0.0476, 0.0466, 0.0455, 0.0434, 0.0418, 0.0402, 0.0381, 0.0368, 0.0357, 0.0349, 0.035]
+    val_loss = [0.0755, 0.0614, 0.0576, 0.0552, 0.0531, 0.0532, 0.0519, 0.0513, 0.0507, 0.0509, 0.0508, 0.0507, 0.0508, 0.0512, 0.0512, 0.0511, 0.053, 0.0573, 0.0505, 0.051, 0.0499, 0.0508, 0.049, 0.05, 0.0518, 0.0501, 0.0504, 0.0508, 0.0514, 0.0513, 0.0514]
+    train_acc = [0.9642, 0.9853, 0.9873, 0.9883, 0.9888, 0.9893, 0.9896, 0.9901, 0.9903, 0.9905, 0.9906, 0.9905, 0.9905, 0.9904, 0.9903, 0.9902, 0.9903, 0.9902, 0.9903, 0.9905, 0.9907, 0.9909, 0.9911, 0.9914, 0.9918, 0.9921, 0.9925, 0.9927, 0.9929, 0.9931, 0.993]
+    val_acc = [0.9859, 0.9883, 0.9888, 0.9891, 0.9898, 0.9895, 0.9899, 0.9904, 0.9904, 0.9905, 0.9905, 0.9905, 0.9905, 0.9905, 0.9905, 0.9904, 0.9903, 0.9898, 0.9904, 0.9905, 0.9907, 0.9907, 0.9908, 0.9905, 0.9907, 0.991, 0.9909, 0.991, 0.991, 0.991, 0.991]
+
+    plot_acc_loss(train_loss, val_loss, train_acc, val_acc,'/mnt/DATA/research/project/classificationCOVID19applyseg/result/segmentation/result/Loss_Acc.png')
+
+    train_iou = [0.8682, 0.9392, 0.9472, 0.951, 0.9533, 0.9552, 0.9567, 0.9585, 0.9594, 0.9602, 0.9608, 0.9604, 0.9603, 0.9599, 0.9595, 0.9591, 0.9594, 0.9589, 0.9595, 0.9602, 0.9609, 0.9617, 0.9625, 0.9642, 0.9654, 0.9667, 0.9683, 0.9694, 0.9704, 0.971, 0.9708]
+    val_iou = [0.94, 0.9495, 0.9515, 0.9528, 0.9561, 0.9546, 0.9562, 0.9587, 0.9584, 0.959, 0.959, 0.9587, 0.9589, 0.9588, 0.9591, 0.9585, 0.9583, 0.9562, 0.9583, 0.959, 0.9597, 0.9599, 0.96, 0.9587, 0.9602, 0.9611, 0.9608, 0.9609, 0.9612, 0.9611, 0.9611]
+    train_dice = [0.9255, 0.9686, 0.9729, 0.9749, 0.9761, 0.9771, 0.9779, 0.9788, 0.9793, 0.9797, 0.98, 0.9798, 0.9797, 0.9795, 0.9793, 0.9791, 0.9793, 0.979, 0.9793, 0.9797, 0.9801, 0.9805, 0.9809, 0.9817, 0.9824, 0.9831, 0.9839, 0.9845, 0.985, 0.9853, 0.9852]
+    val_dice = [0.969, 0.974, 0.9751, 0.9758, 0.9775, 0.9767, 0.9775, 0.9788, 0.9787, 0.979, 0.979, 0.9789, 0.9789, 0.9789, 0.9791, 0.9788, 0.9786, 0.9775, 0.9786, 0.979, 0.9794, 0.9795, 0.9795, 0.9788, 0.9796, 0.9801, 0.98, 0.98, 0.9801, 0.9801, 0.9801]
+
+    plot_IoU_DSC(train_iou, val_iou,train_dice, val_dice, '/mnt/DATA/research/project/classificationCOVID19applyseg/result/segmentation/result/IoU_DSC.png')
+    # plot_loss(train_loss, val_loss)
+
+    # visualize_train(hist_model)    
     
-    
-    # # TEST 
+    # TEST 
     # model.load_state_dict(torch.load(opt.model_path))
-    # _,_, test_dataloader = set_dataloader(opt.batch_size, augs, transfms)
+    # test_dataloader = set_dataloader(opt.data_path, opt.batch_size, augs, transfms)['test']
 
     # image, y_true, y_pred, test_dict = test(test_dataloader, device, model, calculate_metrics) 
     # print(test_dict)
     
-    # ghi ket qua
-    # with open('./visualize/test_result.txt', 'w') as wf:
+    # # ghi ket qua
+    # with open('/mnt/DATA/research/project/classificationCOVID19applyseg/result/segmentation/result/test_result.txt', 'w') as wf:
     #     wf.writelines(str(test_dict.items()))
 
     ## INFERENCE
 
-    img_path = '/mnt/DATA/covid19_resnet152_python-main/archive_14gb/COVIDxCXR3/'
-    mask_path = '/mnt/DATA/covid19_resnet152_python-main/archive_14gb/script/segment/visualize/FPN_DenseNet121/lung_mask/'
+    img_path = '/mnt/DATA/research/project/classificationCOVID19applyseg/dataset/COVIDxCXR3/'
+    mask_path = '/mnt/DATA/research/project/classificationCOVID19applyseg/result/segmentation/lung_mask/'
     
     # EDATest_Neg
-    # inference(img_path, mask_path + 'EDA_Test/Negative/', mask_path + 'EDA_Test/img_npN.npy', mask_path + 'EDA_Test/y_predictN.npy', mask_path +'EDA_Test/filenameN.txt', model,train = False, neg = True)
+    # inference(img_path, mask_path + 'EDA_Test/Negative/', mask_path + 'EDA_Test/img_npN.npy', mask_path + 'EDA_Test/y_predictN.npy', mask_path +'EDA_Test/filenameN.txt', model,opt,train = False, neg = True)
 
     # # EDATest_Pos
-    # inference(img_path, mask_path + 'EDA_Test/Positive/', mask_path + 'EDA_Test/img_npP.npy', mask_path +'EDA_Test/y_predictP.npy', mask_path +'EDA_Test/filenameP.txt', model,train=False, neg = False)
+    # inference(img_path, mask_path + 'EDA_Test/Positive/', mask_path + 'EDA_Test/img_npP.npy', mask_path +'EDA_Test/y_predictP.npy', mask_path +'EDA_Test/filenameP.txt', model,opt, train=False, neg = False)
 
 
     # #EDATrain_Neg
-    # inference(img_path, mask_path + 'EDA_Train/Negative/', mask_path + 'EDA_Train/img_npN.npy', mask_path +'EDA_Train/y_predictN.npy', mask_path +'EDA_Train/filenameN.txt', model)
+    # inference(img_path, mask_path + 'EDA_Train/Negative/', mask_path + 'EDA_Train/img_npN.npy', mask_path +'EDA_Train/y_predictN.npy', mask_path +'EDA_Train/filenameN.txt', model, opt)
 
     # #EDATrain_Pos
-    # inference(img_path, mask_path + 'EDA_Train/Positive/', mask_path + 'EDA_Train/img_npP.npy', mask_path +'EDA_Train/y_predictP.npy', mask_path +'EDA_Train/filenameP.txt', model,neg = False)
+    # inference(img_path, mask_path + 'EDA_Train/Positive/', mask_path + 'EDA_Train/img_npP.npy', mask_path +'EDA_Train/y_predictP.npy', mask_path +'EDA_Train/filenameP.txt', model,opt, neg = False)
 
     # EDATrain_Pos (non pos processing)
-    inference(img_path, mask_path + 'EDA_Train/Positivenon/', mask_path + 'EDA_Train/img_npPnon.npy', mask_path +'EDA_Train/y_predictPnon.npy', mask_path +'EDA_Train/filenamePnon.txt', model,train=True, neg = False)
+    # inference(img_path, mask_path + 'EDA_Train/Positivenon/', mask_path + 'EDA_Train/img_npPnon.npy', mask_path +'EDA_Train/y_predictPnon.npy', mask_path +'EDA_Train/filenamePnon.txt', model,opt, train=True, neg = False)
 

@@ -1,12 +1,12 @@
 from torch.utils.data import Dataset, DataLoader
-from PIL import Image
+# from PIL import Image
 import cv2
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
 
-class ImageDataset(Dataset):
+class COVID_QU_ExDataset(Dataset):
     def __init__(self,csv, train_path, transform = None): # 'Initialization'
         self.csv=csv 
         self.transform=transform    
@@ -24,14 +24,19 @@ class ImageDataset(Dataset):
 
         mask_path = repr(self.train_path + '/' + self.labels[index] + '/lung masks/' + self.image_names.iloc[index])[1:-1]  
 
-        image=Image.open(img_path).convert('L') # https://viblo.asia/p/series-pandas-dataframe-phan-tich-du-lieu-cung-pandas-phan-3-WAyK8AMEZxX
-        mask = Image.open(mask_path).convert('L')
+        image = cv2.imread(img_path,0) # https://viblo.asia/p/series-pandas-dataframe-phan-tich-du-lieu-cung-pandas-phan-3-WAyK8AMEZxX
+        mask = cv2.imread(mask_path,0)
+        # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # mask = cv2.cvtColor(mask, cv2.COLOR_BGR2RGB)
 
+        # print(image.shape)
+        # print(mask.shape)
         image = np.array(image, dtype=np.float32)
         mask = np.array(mask, dtype=np.float32)
 
         mask[mask==255] = 1 
         image = cv2.GaussianBlur(image, (3,3), cv2.BORDER_DEFAULT)
+        # print(image.shape)
         image = np.expand_dims(image,0).transpose(1,2,0)#### (256, 256, 1) 
         if self.transform != None:
             aug = self.transform(image = image, mask = mask)
@@ -79,8 +84,8 @@ class DatasetPredict(Dataset):
         return images, images_name # chua 1 anh + tên
 
 if __name__ == '__main__':
-    train_csv = pd.read_csv('/media/trucloan/Data/Research/Andy_Le/lung_segmentCOVIDx/COVID_QU_Ex/Lung Segmentation Data/Lung Segmentation Data/train.csv')
-    train_dataset = ImageDataset(train_csv, '/media/trucloan/Data/Research/Andy_Le/lung_segmentCOVIDx/COVID_QU_Ex/Lung Segmentation Data/Lung Segmentation Data/Train')
+    train_csv = pd.read_csv('/mnt/DATA/research/project/classificationCOVID19applyseg/dataset/COVID_QU_Ex/Lung Segmentation Data/Lung Segmentation Data/train.csv')
+    train_dataset = COVID_QU_ExDataset(train_csv, '/media/trucloan/Data/Research/Andy_Le/lung_segmentCOVIDx/COVID_QU_Ex/Lung Segmentation Data/Lung Segmentation Data/Train')
     train_dataloader = DataLoader(train_dataset, batch_size=32, shuffle=False)
 
     for idx in range(12):

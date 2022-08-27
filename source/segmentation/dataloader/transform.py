@@ -2,9 +2,9 @@ import albumentations  as A
 from albumentations.pytorch.transforms import ToTensorV2
 import numpy as np
 
-import sys
-sys.path.insert(0, '/mnt/DATA/research/classificationCOVID19applyseg/source/classification/configs/')
-from myconfigs import get_opt
+# import sys
+# sys.path.insert(0, '/mnt/DATA/research/project/classificationCOVID19applyseg/source/classification/configs/')
+from configs.myconfigs import get_opt
 
 opt = get_opt()
 size = opt.img_size
