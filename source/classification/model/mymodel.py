@@ -52,7 +52,8 @@ def initialize_model(num_classes, feature_extract):
     modelResNet50 = models.resnet50(weights = 'ResNet50_Weights.DEFAULT')
     set_parameter_requires_grad(modelResNet50, feature_extract)
     num_ftrs = modelResNet50.fc.in_features
-    modelResNet50.fc = nn.Linear(num_ftrs, num_classes)    
+    modelResNet50.fc = nn.Linear(num_ftrs, num_classes)  
+
 
     ################################################
 
@@ -62,11 +63,16 @@ def initialize_model(num_classes, feature_extract):
     modelEff.classifier[1] = nn.Linear(num_ftrs, num_classes)  
 
     ################################################
+    modelResNet101 = models.resnet101(weights = 'ResNet101_Weights.DEFAULT')
+    set_parameter_requires_grad(modelResNet101, feature_extract)
+    num_ftrs = modelResNet101.fc.in_features
+    modelResNet101.fc = nn.Linear(num_ftrs, num_classes)  
     # model = CovidNet('small', n_classes=num_classes).cuda()
     model_list.append(modelResNet152)
     model_list.append(modelvgg19_bn)
     model_list.append(modelResNet18)
     model_list.append(modelResNet50)
+    model_list.append(modelResNet101)
     model_list.append(modelEff)
    
     return model_list    
@@ -103,12 +109,12 @@ def optimi(model_ft, device, feature_extract, lr, num_epochs):
     scheduler = lr_scheduler.MultiStepLR(optimizer, milestones = [5,10], gamma=0.1, last_epoch=-1, verbose=False)
     return optimizer, scheduler
 
-def load_chekpoint(path):
+def load_chekpoint(path, model):
     checkpoint = torch.load(path)#, map_location=device)
-    # model_ft.load_state_dict(checkpoint['model_state_dict'])
+    model.load_state_dict(checkpoint['model_state_dict'])
     # optimizer_ft.load_state_dict(checkpoint['optimizer_state_dict'])
     epoch = checkpoint['epoch']
     loss_list = checkpoint['loss_list']
     acc_list = checkpoint['train_acc']
 
-    return epoch, loss_list, acc_list
+    return model, epoch, loss_list, acc_list

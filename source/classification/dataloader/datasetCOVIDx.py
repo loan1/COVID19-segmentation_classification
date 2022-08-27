@@ -36,7 +36,7 @@ class ImageDataset(Dataset): #train tren CXR
         return image, targets # chua 1 cap
 
 class LungImageDataset(Dataset): #train tren Lung + Img
-    def __init__(self,csv, img_folder, mask_folder, img_size, train = True, transform = False): # 'Initialization'
+    def __init__(self,csv, img_folder, mask_folder, img_size, train = True, transform = None): # 'Initialization'
         self.csv=csv
         self.transform=transform
         self.img_folder=img_folder
@@ -74,6 +74,8 @@ class LungImageDataset(Dataset): #train tren Lung + Img
 
         _, maskinv = cv2.threshold(mask, 0,255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU) #invert
 
+        # print(image.shape)
+
         image = cv2.resize(image,(self.img_size,self.img_size))
         maskthres = cv2.resize(maskthres,(self.img_size,self.img_size))
         maskinv = cv2.resize(maskinv,(self.img_size,self.img_size))
@@ -83,14 +85,18 @@ class LungImageDataset(Dataset): #train tren Lung + Img
         lung = cv2.resize(res,(self.img_size,self.img_size))
 
         resnotlung = cv2.bitwise_and(image,maskinv)
-        cxrnotlung = cv2.resize(resnotlung,(256,256))
+        resnotlung = cv2.cvtColor(resnotlung, cv2.COLOR_GRAY2RGB) #them vao
+        cxrnotlung = cv2.resize(resnotlung,(self.img_size,self.img_size))
 
-        if self.transform != False:  
+        # print(lung.shape) # (256, 256, 3)
+        if self.transform != None:  
             aug = self.transform(image = lung)
             lung=aug['image']
             lung = lung.float()
 
-        if self.transform != False:  
+        # print(lung.shape) # torch.Size([3, 256, 256])
+        # print(cxrnotlung.shape) # (256, 256)
+        if self.transform != None:  
             aug = self.transform(image = cxrnotlung)
             cxrnotlung=aug['image']
             cxrnotlung = cxrnotlung.float()

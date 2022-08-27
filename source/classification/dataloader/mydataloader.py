@@ -9,9 +9,11 @@ from torch.utils.data import DataLoader
 # import module
 
 from .datasetCOVIDx import ImageDataset, LungImageDataset
+from configs.myconfigs import get_opt
 
 
 def custom_dataloader(data_path, augs, transfms, batch_size):
+    opt = get_opt()
 
     # duong dan den cac file txt    
     train_metadata = data_path + 'metadata/train_set.txt'
@@ -33,14 +35,15 @@ def custom_dataloader(data_path, augs, transfms, batch_size):
     val_txt.columns = ["file_name","label"]
 
     # goi dataset CXR
-    train_dataset = ImageDataset(train_txt, train_path,augs)
-    test_dataset = ImageDataset(test_txt, test_path,transfms)
-    val_dataset = ImageDataset(val_txt, train_path,transfms)
+    # train_dataset = ImageDataset(train_txt, train_path,augs)
+    # test_dataset = ImageDataset(test_txt, test_path,transfms)
+    # val_dataset = ImageDataset(val_txt, train_path,transfms)
 
     # goi dataset Lung
-    # train_dataset = LungImageDataset(train_txt,opt.train_path,opt.mask_path,True,augs)
-    # test_dataset = LungImageDataset(test_txt,opt.test_path,opt.mask_path,False,transfms)
-    # val_dataset = LungImageDataset(val_txt,opt.train_path,opt.mask_path, True, transfms)
+    # def __init__(self,csv, img_folder, mask_folder, img_size, train = True, transform = None): # 'Initialization'
+    train_dataset = LungImageDataset(train_txt,train_path,opt.mask_path,opt.img_size,True,augs)
+    test_dataset = LungImageDataset(test_txt,test_path,opt.mask_path,opt.img_size,False,transfms)
+    val_dataset = LungImageDataset(val_txt,train_path,opt.mask_path, opt.img_size,True, transfms)
 
     loader ={
         'train' : DataLoader(
@@ -51,12 +54,12 @@ def custom_dataloader(data_path, augs, transfms, batch_size):
         'val' : DataLoader(
             val_dataset, 
             batch_size = batch_size,
-            shuffle = True
+            shuffle = False
         ),
         'test' : DataLoader(
             test_dataset, 
             batch_size = batch_size,
-            shuffle = True
+            shuffle = False
         )
     }   
     return loader

@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 # import module
 
 import sys
-sys.path.insert(0, '/mnt/DATA/research/classificationCOVID19applyseg/source/segmentation/dataloader/')
+sys.path.insert(0, '/mnt/DATA/research/project/classificationCOVID19applyseg/source/segmentation/dataloader/')
 
 from configs.myconfigs import get_opt
 from dataloader.mydataloader import custom_dataloader
@@ -39,8 +39,8 @@ from transform import augs, transfms
 def main(opt):
 
     # setting variable
-    checkpoint_path = opt.checkpoint_path + 'cp'
-    model_path = opt.checkpoint_path + 'model'
+    checkpoint_path = opt.checkpoint_path + 'Lung/' + 'cp'
+    model_path = opt.checkpoint_path + 'Lung/' + 'model'
     result_path = opt.result_path
     feature_extract = opt.feature_extract
     img_path = opt.img_path
@@ -56,29 +56,39 @@ def main(opt):
     model = model_list[1]
     model_name = lsmodel_name[1]
     print(model_name)
-    print(model)
+    # print(model)
+    model_path = model_path + model_name + '.pt'
+    checkpoint_path = checkpoint_path + model_name +'.pt'
+
     optimizer, scheduler = optimi(model,device, feature_extract, lr, num_epochs)
 
     # # # TRAIN
     since = time.time()
-    loss_list, acc_list = training_loop(model, model_name, optimizer, criterion, scheduler, device, num_epochs, myloader, checkpoint_path, model_path)
+    loss_list, acc_list = training_loop(model, optimizer, criterion, scheduler, device, num_epochs, myloader, checkpoint_path, model_path)
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
 
     # visualize loss and acc
-    _, loss_list, acc_list = load_chekpoint(checkpoint_path + model_name + 'ver2.pt')
-    visualize_loss(loss_list, result_path + 'CXR/' + model_name + '/lossFT_CXR_RGB_mean_std_compute.png', model_name)
-    visualize_acc(acc_list,result_path + 'CXR/' + model_name + '/ACCFT_CXR_RGB_mean_std_compute.png', model_name)
+    model,_, loss_list, acc_list = load_chekpoint(checkpoint_path, model)
+    # print("Model's state_dict:")
+    # for param_tensor in model.state_dict():
+    #     print(param_tensor,"\t", model.state_dict()[param_tensor].size())
+    # print()
+
+    visualize_loss(loss_list, result_path + 'Lung/' + model_name + '/lossFT_CXR_RGB_mean_std_compute.png', model_name)
+    visualize_acc(acc_list,result_path + 'Lung/' + model_name + '/ACCFT_CXR_RGB_mean_std_compute.png', model_name)
 
 
 # TEST
-    model = load_model(model_path + model_name + 'ver2.pt')
+    model = load_model(model_path)
     y_true, y_pred = test_loop(model, device, myloader['test'])
     accuracy = accuracy_score(y_true, y_pred)
     print(accuracy)
 
-    confusion(y_true, y_pred, opt.classes, result_path +'CXR/' + model_name + '/confusionmatrix_CXR_RGB_mean_std_compute.png')
-    report(y_true, y_pred, opt.classes, result_path +'CXR/' + model_name + '/classification_reportpy_CXR_RGB_mean_std_compute.txt')
+    confusion(y_true, y_pred, opt.classes, result_path +'Lung/' + model_name + '/confusionmatrix_CXR_RGB_mean_std_compute.png')
+    report(y_true, y_pred, opt.classes, result_path +'Lung/' + model_name + '/classification_reportpy_CXR_RGB_mean_std_compute.txt')
+
+    #############################################################################################################
     
     # pred_str = str('')
 
@@ -102,4 +112,5 @@ if __name__ == '__main__':
     # resnet = initialize_model(opt.num_classes, opt.feature_extract)
 
     main(opt)
+
 

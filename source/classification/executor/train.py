@@ -3,7 +3,7 @@ import numpy as np
 from tqdm import tqdm
 import torch
 
-def training_loop(model, model_name, optimizer, criterion, scheduler, device, num_epochs, dataloader, checkpoint_path, model_path):
+def training_loop(model, optimizer, criterion, scheduler, device, num_epochs, dataloader, checkpoint_path, model_path):
     
     model.to(device)
     #List to store loss to visualize
@@ -27,8 +27,10 @@ def training_loop(model, model_name, optimizer, criterion, scheduler, device, nu
         ###################
         
         model.train()
-        for data, label in tqdm(dataloader['train']):
-        # for _,_,_,_, data, label, _ in tqdm(dataloader()['train']):
+        # for data, label in tqdm(dataloader['train']): #cxr
+        # image, mask, maskthres, lung, cxrnotlung, targets, name 
+        for _,_,_,data, _, label, _ in tqdm(dataloader['train']): #lung
+        # for _,_,_,_, data, label, _ in tqdm(dataloader['train']): #cxrnotlung
             data = data.to(device)
             label = label.to(device)
             optimizer.zero_grad()
@@ -53,8 +55,9 @@ def training_loop(model, model_name, optimizer, criterion, scheduler, device, nu
         
         model.eval()
         with torch.no_grad():
-            for data, label in tqdm(dataloader['val']):
-            # for _,_,_,_,data, label,_ in tqdm(dataloader()['val']):
+            # for data, label in tqdm(dataloader['val']): #cxr
+            for _,_,_,data, _, label, _ in tqdm(dataloader['val']): #lung
+            # for _,_,_,_,data, label,_ in tqdm(dataloader()['val']): #notlung
                 data = data.to(device)
                 label = label.to(device)
                 output = model(data)
@@ -93,7 +96,7 @@ def training_loop(model, model_name, optimizer, criterion, scheduler, device, nu
             'train_acc': accli,
             'loss_list': lossli,
             'loss': loss
-            }, checkpoint_path + model_name +'ver2.pt')
+            }, checkpoint_path)
         
         if valid_loss <= valid_loss_min:
             print('Validation loss decreased ({:.6f} --> {:.6f}). Saving model ...'.format(
@@ -102,7 +105,7 @@ def training_loop(model, model_name, optimizer, criterion, scheduler, device, nu
             
             count = 0
             print('count = ',count)
-            torch.save(model, model_path + model_name+'ver2.pt') #save model 
+            torch.save(model, model_path) #save model 
                                   
             valid_loss_min = valid_loss
         else:

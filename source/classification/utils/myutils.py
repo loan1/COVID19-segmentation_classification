@@ -3,12 +3,21 @@ import numpy as np
 import torch
 import random
 
-def seed_everything(seed):        
+def seed_everything(seed_value):
 
-    os.environ['PYTHONHASHSEED'] = str(seed)
-    random.seed(seed) # set python seed
+    # set python seed
+    random.seed(seed_value)
 
-    np.random.seed(seed) # seed the global NumPy RNG
+    # seed the global NumPy RNG
+    np.random.seed(seed_value)
 
-    torch.manual_seed(seed) # seed the RNG for all devices (both CPU and CUDA):
-    torch.cuda.manual_seed_all(seed)
+    # seed the RNG for all devices (both CPU and CUDA):
+    torch.manual_seed(seed_value)
+
+    os.environ['PYTHONHASHSEED'] = str(seed_value)    
+
+    if torch.cuda.is_available(): 
+        torch.cuda.manual_seed(seed_value)
+        torch.cuda.manual_seed_all(seed_value)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
