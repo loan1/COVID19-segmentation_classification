@@ -1,14 +1,14 @@
 # import module
 from .custom_dataset import COVID_QU_ExDataset
 
-#import lib
+# import lib
 from torch.utils.data import DataLoader
 import pandas as pd
 
 
 def set_dataloader(lung_data, batch_size, augs, transfms):
-    
-    train_csv = pd.read_csv(lung_data+'train.csv') 
+
+    train_csv = pd.read_csv(lung_data+'train.csv')
     train_dataset = COVID_QU_ExDataset(train_csv, lung_data + 'Train', augs)
 
     val_csv = pd.read_csv(lung_data+'val.csv')
@@ -19,12 +19,12 @@ def set_dataloader(lung_data, batch_size, augs, transfms):
 
     train_dataloader = DataLoader(
         train_dataset,
-        batch_size = batch_size,
-        shuffle = True
+        batch_size=batch_size,
+        shuffle=True
     )
 
     val_dataloader = DataLoader(
-        val_dataset, 
+        val_dataset,
         batch_size=batch_size,
         shuffle=False
     )
@@ -35,4 +35,7 @@ def set_dataloader(lung_data, batch_size, augs, transfms):
         shuffle=False
     )
 
-    return {'train':train_dataloader, 'val': val_dataloader, 'test' : test_dataloader}
+    return {
+        'train': train_dataloader,
+        'val': val_dataloader,
+        'test': test_dataloader}
