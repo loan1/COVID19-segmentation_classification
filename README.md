@@ -19,7 +19,25 @@
 - cuda 11.6
 - cuDNN 8.3.20
 - PyTorch 1.12.0
-
-
-
-
+## Compiling
+Segmentation script:
+```bash
+python source\segmentation\mainseg.py
+```
+Classification script:
+```bash
+python source\classification\mainclassification.py
+```
+## Results
+| **Models**      | **Experiments**     | **Accuracy** |  **Recall** | **Precision** | **F1-score** |
+|:-------|:---------|:---------:|:-------:|:---------:|:---------:|
+| ResNet50        | Original CXR     | 98.75%     | 98.75%  | 98.78%    | 98.75%|
+|               | Segmented Lung   | 96.50%     | 96.50%  | 96.62%    | 96.50%|
+|              | CXR without Lung | 98.75%     | 98.75%  | 98.78%    | 98.75%|
+| VGG19_bn        | Original CXR     | 98.00%     | 98.00%  | 98.08%    | 98.00%|
+|                | **Segmented Lung**  | **99.00%**     | **99.00%**  | **99.02%**    | **99.00%**|
+|                | CXR without Lung | 98.25%     | 98.25%  | 98.31%    | 98.25%|
+| EfficientNetB7  | Original CXR     | 97.75%     | 97.75%  | 97.85%    | 97.75%|
+|                | Segmented Lung   | 98.50%     | 98.50%  | 98.52%    | 98.50%|
+|                | CXR without Lung | 96.75%     | 96.75%  | 96.95%    | 96.75%|
+     
