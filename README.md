@@ -12,4 +12,12 @@
 - PyTorch 1.12.0
 
 ## Pipeline
-![The pipeline of the segmentation-classification]([https://drive.google.com/drive/my-drive](https://drive.google.com/file/d/1AORU1FxC5tbfjIhBE_90qnfxNN8BEYWo/view?usp=sharing))
+![The pipeline of the segmentation-classification](https://github.com/loan1/COVID19-segmentation_classification/blob/main/images/pipeline.png)
+## Datasets
+- **Train Lung Segmentation**: [COVID_QU_Ex](https://www.sciencedirect.com/science/article/pii/S0010482521007964) contains of 33,920 CXR images including:
+  - 11,956 COVID-19
+  - 11,263 Non-COVID infections (Viral or Bacterial Pneumonia)
+  - 10,701 Normal 
+*Ground-truth lung segmentation masks are provided for the entire dataset.*
+- **Prediction Lung Segmentation and classification Covid-19**: [COVIDx CXR3 dataset](https://www.nature.com/articles/s41598-020-76550-z) (update 06/02/2022) contains 29,986 CXR images
+
